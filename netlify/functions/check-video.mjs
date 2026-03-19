@@ -35,16 +35,3 @@ export default async (request, context) => {
     return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { "Access-Control-Allow-Origin": "*" } });
   }
 };
-```
-→ Commit changes
-
----
-
-## 완성 후 체크
-
-GitHub 루트에서 이렇게 보여야 합니다:
-```
-README.md
-netlify.toml
-public/
-netlify/
