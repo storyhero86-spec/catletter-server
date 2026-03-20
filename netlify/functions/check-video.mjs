@@ -11,25 +11,25 @@ export default async (request, context) => {
   if (!requestId) return new Response(JSON.stringify({ error: "request_id required" }), { status: 400, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } });
   const endpoint = "fal-ai/minimax/hailuo-2.3-fast/standard/image-to-video";
   try {
-    const statusUrl = "https://queue.fal.run/" + endpoint + "/requests/" + requestId + "/status";
-    const statusRes = await fetch(statusUrl, {
+    const resultRes = await fetch("https://queue.fal.run/" + endpoint + "/requests/" + requestId, {
+      method: "GET",
       headers: { "Authorization": "Key " + FAL_KEY },
     });
-    const statusText = await statusRes.text();
-    let st;
-    try { st = JSON.parse(statusText); } catch(e) {
-      return new Response(JSON.stringify({ status: "PARSE_ERROR", httpStatus: statusRes.status, body: statusText.slice(0, 300) }), { headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } });
-    }
-    if (st.status === "COMPLETED") {
-      const resultRes = await fetch("https://queue.fal.run/" + endpoint + "/requests/" + requestId, {
-        headers: { "Authorization": "Key " + FAL_KEY },
-      });
+    if (resultRes.status === 200) {
       const result = await resultRes.json();
-      return new Response(JSON.stringify({ status: "COMPLETED", video_url: result.video?.url }), {
+      if (result.video && result.video.url) {
+        return new Response(JSON.stringify({ status: "COMPLETED", video_url: result.video.url }), {
+          headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        });
+      }
+    }
+    if (resultRes.status === 202) {
+      return new Response(JSON.stringify({ status: "IN_PROGRESS" }), {
         headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
       });
     }
-    return new Response(JSON.stringify({ status: st.status || "UNKNOWN", httpStatus: statusRes.status, raw: st }), {
+    const bodyText = await resultRes.text();
+    return new Response(JSON.stringify({ status: "WAITING", httpStatus: resultRes.status, body: bodyText.slice(0, 300) }), {
       headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
     });
   } catch (e) {
