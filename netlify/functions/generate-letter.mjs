@@ -42,14 +42,3 @@ export default async (request, context) => {
     return new Response(JSON.stringify({ error: "fetch error: " + e.message }), { status: 500, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } });
   }
 };
-```
-
-4. **Commit changes** 클릭
-
----
-
-## 배포 후 확인
-
-1~2분 대기 후 브라우저에서:
-```
-https://sage-pie-4d1233.netlify.app/.netlify/functions/generate-letter
