@@ -2,93 +2,39 @@
 <html><head><meta charset="UTF-8"><title>API Test</title></head>
 <body style="font-family:sans-serif;padding:20px;max-width:600px;margin:0 auto">
 <h1>🐾 CatLetter API 테스트</h1>
-<p>각 단계를 하나씩 테스트합니다.</p>
-
-<h2>1. 편지 생성 테스트</h2>
+<h2>1. 편지 생성</h2>
 <button onclick="testLetter()">테스트</button>
 <pre id="r1">-</pre>
-
-<h2>2. 사진 업로드 테스트</h2>
+<h2>2. 사진 업로드</h2>
 <input type="file" id="photo" accept="image/*">
 <button onclick="testUpload()">테스트</button>
 <pre id="r2">-</pre>
-
-<h2>3. 영상 생성 시작 테스트</h2>
+<h2>3. 영상 생성 시작</h2>
 <button onclick="testStart()">테스트</button>
 <pre id="r3">-</pre>
-
-<h2>4. 영상 상태 확인</h2>
+<h2>4. 영상 상태 확인 (30초 후 클릭)</h2>
 <button onclick="testCheck()">테스트</button>
 <pre id="r4">-</pre>
-
 <script>
-let imageUrl = "";
-let requestId = "";
-
-async function testLetter() {
-  document.getElementById("r1").textContent = "요청 중...";
-  try {
-    const res = await fetch("/.netlify/functions/generate-letter", {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({prompt: "고양이 조이가 엄마에게 보내는 짧은 편지 50자"})
-    });
-    const data = await res.json();
-    document.getElementById("r1").textContent = "상태: " + res.status + "\n" + JSON.stringify(data, null, 2);
-  } catch(e) {
-    document.getElementById("r1").textContent = "에러: " + e.message;
-  }
+let imageUrl="",statusUrl="",responseUrl="";
+async function testLetter(){
+  document.getElementById("r1").textContent="요청 중...";
+  try{const r=await fetch("/.netlify/functions/generate-letter",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt:"고양이 조이가 엄마에게 보내는 짧은 편지 50자"})});const d=await r.json();document.getElementById("r1").textContent="상태: "+r.status+"\n"+JSON.stringify(d,null,2);}catch(e){document.getElementById("r1").textContent="에러: "+e.message;}
 }
-
-async function testUpload() {
-  const file = document.getElementById("photo").files[0];
-  if (!file) { document.getElementById("r2").textContent = "사진을 먼저 선택하세요"; return; }
-  document.getElementById("r2").textContent = "업로드 중...";
-  const reader = new FileReader();
-  reader.onload = async function(e) {
-    try {
-      const res = await fetch("/.netlify/functions/upload-image", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({image_base64: e.target.result})
-      });
-      const data = await res.json();
-      if (data.image_url) imageUrl = data.image_url;
-      document.getElementById("r2").textContent = "상태: " + res.status + "\nURL: " + (data.image_url || "없음").slice(0, 100) + "\n" + JSON.stringify(data, null, 2).slice(0, 500);
-    } catch(e) {
-      document.getElementById("r2").textContent = "에러: " + e.message;
-    }
-  };
-  reader.readAsDataURL(file);
+async function testUpload(){
+  const f=document.getElementById("photo").files[0];if(!f){document.getElementById("r2").textContent="사진 선택하세요";return;}
+  document.getElementById("r2").textContent="업로드 중...";
+  const reader=new FileReader();reader.onload=async function(e){try{const r=await fetch("/.netlify/functions/upload-image",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image_base64:e.target.result})});const d=await r.json();if(d.image_url)imageUrl=d.image_url;document.getElementById("r2").textContent="상태: "+r.status+"\n"+JSON.stringify(d,null,2).slice(0,500);}catch(e){document.getElementById("r2").textContent="에러: "+e.message;}};reader.readAsDataURL(f);
 }
-
-async function testStart() {
-  if (!imageUrl) { document.getElementById("r3").textContent = "먼저 사진 업로드를 하세요"; return; }
-  document.getElementById("r3").textContent = "영상 생성 요청 중... (image_url: " + imageUrl.slice(0,80) + ")";
-  try {
-    const res = await fetch("/.netlify/functions/start-video", {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({image_url: imageUrl, prompt: "A cat breathing softly, minimal gentle movement, calm and peaceful, warm indoor lighting"})
-    });
-    const data = await res.json();
-    if (data.request_id) requestId = data.request_id;
-    document.getElementById("r3").textContent = "상태: " + res.status + "\n" + JSON.stringify(data, null, 2);
-  } catch(e) {
-    document.getElementById("r3").textContent = "에러: " + e.message;
-  }
+async function testStart(){
+  if(!imageUrl){document.getElementById("r3").textContent="먼저 사진 업로드";return;}
+  document.getElementById("r3").textContent="요청 중...";
+  try{const r=await fetch("/.netlify/functions/start-video",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image_url:imageUrl})});const d=await r.json();statusUrl=d.status_url||"";responseUrl=d.response_url||"";document.getElementById("r3").textContent="상태: "+r.status+"\n"+JSON.stringify(d,null,2);}catch(e){document.getElementById("r3").textContent="에러: "+e.message;}
 }
-
-async function testCheck() {
-  if (!requestId) { document.getElementById("r4").textContent = "먼저 영상 생성을 시작하세요"; return; }
-  document.getElementById("r4").textContent = "확인 중...";
-  try {
-    const res = await fetch("/.netlify/functions/check-video?request_id=" + requestId);
-    const data = await res.json();
-    document.getElementById("r4").textContent = "상태: " + res.status + "\n" + JSON.stringify(data, null, 2);
-  } catch(e) {
-    document.getElementById("r4").textContent = "에러: " + e.message;
-  }
+async function testCheck(){
+  if(!statusUrl){document.getElementById("r4").textContent="먼저 영상 생성 시작";return;}
+  document.getElementById("r4").textContent="확인 중...";
+  try{const r=await fetch("/.netlify/functions/check-video",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({status_url:statusUrl,response_url:responseUrl})});const d=await r.json();document.getElementById("r4").textContent="상태: "+r.status+"\n"+JSON.stringify(d,null,2);}catch(e){document.getElementById("r4").textContent="에러: "+e.message;}
 }
 </script>
 </body>
