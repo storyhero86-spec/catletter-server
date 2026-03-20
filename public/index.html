@@ -269,6 +269,7 @@ document.getElementById("btn-generate").addEventListener("click", async function
     if (!startRes.ok) throw new Error("영상 생성 시작 실패");
     const startData = await startRes.json();
     if (startData.error) throw new Error(startData.error);
+    if (!startData.status_url) throw new Error("status_url 없음: " + JSON.stringify(startData).slice(0, 200));
     
     // 4. 폴링
     let elapsed = 0;
@@ -277,21 +278,25 @@ document.getElementById("btn-generate").addEventListener("click", async function
       elapsed += 4;
       document.getElementById("loading-msg").textContent = "영상 만드는 중... (" + elapsed + "초)";
       
-      const checkRes = await fetch("/.netlify/functions/check-video", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status_url: startData.status_url, response_url: startData.response_url }),
-      });
-      if (!checkRes.ok) continue;
-      const checkData = await checkRes.json();
-      
-      if (checkData.status === "COMPLETED" && checkData.video_url) {
-        state.videoUrl = checkData.video_url;
-        clearInterval(msgInterval);
-        showResult();
-        return;
+      try {
+        const checkRes = await fetch("/.netlify/functions/check-video", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status_url: startData.status_url, response_url: startData.response_url }),
+        });
+        const checkData = await checkRes.json();
+        document.getElementById("loading-sub").textContent = "상태: " + JSON.stringify(checkData).slice(0, 100);
+        
+        if (checkData.status === "COMPLETED" && checkData.video_url) {
+          state.videoUrl = checkData.video_url;
+          clearInterval(msgInterval);
+          showResult();
+          return;
+        }
+        if (checkData.status === "FAILED") throw new Error("영상 생성 실패");
+      } catch(checkErr) {
+        document.getElementById("loading-sub").textContent = "체크 에러: " + checkErr.message;
       }
-      if (checkData.status === "FAILED") throw new Error("영상 생성 실패");
     }
     throw new Error("시간 초과 (3분)");
   } catch (e) {
