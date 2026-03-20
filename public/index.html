@@ -184,9 +184,10 @@ function renderChips(containerId, items, key, isChar) {
   el.innerHTML = "";
   items.forEach(item => {
     const btn = document.createElement("button");
-    btn.className = "chip" + (isChar ? " chip-sm" : "") + (state[key] === (item.l || item.v) ? " active" : "");
+    const isActive = key === "heart" ? (state.heart && state.heart.l === item.l) : (state[key] === (item.l || item.v));
+    btn.className = "chip" + (isChar ? " chip-sm" : "") + (isActive ? " active" : "");
     btn.textContent = (item.e ? item.e + " " : "") + item.l;
-    btn.onclick = () => { state[key] = item.l || item.v; if(key === "heart") state.heart = item; renderAll(); checkReady(); };
+    btn.onclick = () => { if(key === "heart"){ state.heart = item; } else { state[key] = item.l || item.v; } renderAll(); checkReady(); };
     el.appendChild(btn);
   });
 }
@@ -243,9 +244,8 @@ document.getElementById("btn-generate").addEventListener("click", async function
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ prompt: buildPrompt() }),
     });
-    if (!letterRes.ok) throw new Error("편지 생성 실패");
     const letterData = await letterRes.json();
-    if (letterData.error) throw new Error(letterData.error);
+    if (!letterRes.ok || letterData.error) throw new Error("편지: " + (letterData.error || letterRes.status));
     state.letter = letterData.letter;
     
     // 2. 사진 업로드
