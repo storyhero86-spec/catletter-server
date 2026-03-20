@@ -97,6 +97,7 @@ body{min-height:100vh;background:linear-gradient(170deg,#faf6f0,#f5ede1 40%,#f0e
     <div class="section"><label class="label">성격 <span class="req">*</span></label><div class="char-grid" id="g-ch"></div></div>
     <div class="section"><label class="label">지금 기분 <span class="req">*</span></label><div class="grid" id="g-mo"></div></div>
     <div class="section"><label class="label">전하고 싶은 마음 <span class="req">*</span></label><div class="mood-grid" id="g-ht"></div></div>
+    <div class="section" id="motion-section"><label class="label">영상 움직임 스타일</label><div class="grid" id="g-mt"></div></div>
     <button class="btn" id="bt" disabled>✉️ 텍스트 편지 받기</button>
     <button class="btn btn-video" id="bv" disabled style="margin-top:10px">🎬 영상 편지 받기</button>
     <p style="font-size:11px;color:#b8aa97;text-align:center;margin-top:8px">텍스트 편지는 무료 · 영상 편지는 건당 ~270원</p>
@@ -116,9 +117,10 @@ const CH=[{l:"소심한",e:"🐾"},{l:"활발한",e:"⚡"},{l:"조용한",e:"�
 const MO=[{l:"기분좋아",e:"😊"},{l:"행복해",e:"🥰"},{l:"만족해",e:"☺️"},{l:"삐졌어",e:"😤"},{l:"화났어",e:"😡"},{l:"슬퍼",e:"🥺"}];
 const HT=[{l:"보고싶어요",e:"🥺",p:"그리워하거나 기다리는 마음"},{l:"감사해요",e:"🌸",p:"고맙고 감사한 마음"},{l:"사랑해요",e:"💕",p:"따뜻한 애정"},{l:"응원해요",e:"💪",p:"힘내라는 응원"},{l:"놀아주세요",e:"🎾",p:"같이 놀고 싶은 마음"},{l:"축하해요",e:"🎉",p:"축하"},{l:"일상",e:"☀️",p:"평소 하고 싶은 말"}];
 const SP=[{l:"반말",d:"나 ~해, ~거야"},{l:"존댓말",d:"저 ~해요, ~거예요"}];
+const MT=[{l:"조용히 숨쉬기",e:"😌",p:"A cat breathing softly, minimal gentle movement, calm and peaceful, warm indoor lighting, cinematic"},{l:"고개 기울이기",e:"😺",p:"A cat tilting its head very slightly to one side, curious gentle expression, soft breathing, warm indoor lighting, cinematic"},{l:"느린 눈 깜빡임",e:"😽",p:"A cat with eyes slowly closing and opening in a relaxed slow blink, very minimal body movement, warm soft lighting, cinematic"},{l:"천천히 다가오기",e:"🐱",p:"A cat walking slowly and gracefully toward the camera, soft natural movement, warm indoor lighting, cinematic"}];
 const CG={"소심한":"겁많고 조심스러움","활발한":"에너지 넘침","조용한":"말수 적음","말괄량이":"장난기 넘침","수다쟁이":"말 정말 많음","잠꾸러기":"항상 졸림","호기심 만땅":"모든 게 궁금","욕심꾸러기":"다 내 거","먹보":"밥으로 표현","용감한":"겁없고 당당","새침데기":"관심있는데 티 안 냄","댕냥이":"잘 따름","심술쟁이":"투덜투덜 귀여움","깔끔한":"정돈 좋아함","시크한":"말 극도로 짧음","대범한":"뭐든 괜찮음"};
 const LM=["꾹꾹이 하면서 생각하는 중...","기지개 펴는 중...","하고 싶은 말을 정리하는 중...","솔직해지려고 용기 내는 중...","집사 몰래 편지를 쓰는 중...","발로 편지지를 꺼내는 중..."];
-let S={ph:null,pb:null,nm:"",rc:"",sp:"반말",ch:null,mo:null,ht:null,lt:"",vu:""};
+let S={ph:null,pb:null,nm:"",rc:"",sp:"반말",ch:null,mo:null,ht:null,mt:MT[0],lt:"",vu:""};
 function jo(n){if(!n)return"";const c=n.charCodeAt(n.length-1);return n+((c>=0xAC00&&c<=0xD7A3&&(c-0xAC00)%28!==0)?"이가":"가");}
 function bp(){
   const sg=S.sp==="반말"?'반말 ("나","~해","~거야")':'존댓말 ("저","~해요","~거예요")';
@@ -128,7 +130,9 @@ function bp(){
 }
 function rsp(){const el=document.getElementById("g-sp");el.innerHTML="";SP.forEach(s=>{const b=document.createElement("button");b.className="speech-btn"+(S.sp===s.l?" active":"");b.innerHTML='<span class="speech-lbl">'+s.l+'</span><span class="speech-desc">'+s.d+'</span>';b.onclick=()=>{S.sp=s.l;rsp();};el.appendChild(b);});}
 function rc(id,items,key,cls){const el=document.getElementById(id);el.innerHTML="";items.forEach(item=>{const b=document.createElement("button");const a=key==="ht"?(S.ht&&S.ht.l===item.l):(S[key]===item.l);b.className=cls+(a?" active":"");if(cls.includes("mood-card"))b.innerHTML='<span class="mood-emoji">'+item.e+'</span><span class="mood-label">'+item.l+'</span>';else b.textContent=(item.e?item.e+" ":"")+item.l;b.onclick=()=>{if(key==="ht")S.ht=item;else S[key]=item.l;ra();ck();};el.appendChild(b);});}
-function ra(){rsp();rc("g-ch",CH,"ch","chip chip-sm");rc("g-mo",MO,"mo","chip");rc("g-ht",HT,"ht","mood-card");}
+function ra(){rsp();rc("g-ch",CH,"ch","chip chip-sm");rc("g-mo",MO,"mo","chip");rc("g-ht",HT,"ht","mood-card");
+  const mel=document.getElementById("g-mt");mel.innerHTML="";MT.forEach(m=>{const b=document.createElement("button");b.className="chip"+(S.mt&&S.mt.l===m.l?" active":"");b.textContent=m.e+" "+m.l;b.onclick=()=>{S.mt=m;ra();};mel.appendChild(b);});
+}
 function ck(){document.getElementById("bt").disabled=!(S.nm&&S.rc&&S.ch&&S.mo&&S.ht);document.getElementById("bv").disabled=!(S.ph&&S.nm&&S.rc&&S.ch&&S.mo&&S.ht);}
 document.getElementById("pf").addEventListener("change",function(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=function(v){S.ph=v.target.result;S.pb=v.target.result;document.getElementById("pp").innerHTML='<img src="'+v.target.result+'">';ck();};r.readAsDataURL(f);});
 document.getElementById("i-name").addEventListener("input",function(e){S.nm=e.target.value;ck();});
@@ -159,8 +163,9 @@ async function gv(){
   try{
     const u=await fetch("/.netlify/functions/upload-image",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image_base64:S.pb})});const ud=await u.json();if(ud.error)throw new Error(ud.error);
     document.getElementById("lm").textContent="AI가 고양이를 움직이게 하는 중...";
-    const s=await fetch("/.netlify/functions/start-video",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image_url:ud.image_url})});const sd=await s.json();if(sd.error)throw new Error(sd.error);if(!sd.status_url)throw new Error("status_url 없음");
-    let el=0;while(el<180){await new Promise(r=>setTimeout(r,4000));el+=4;document.getElementById("lm").textContent="영상 만드는 중... ("+el+"초)";
+    const s=await fetch("/.netlify/functions/start-video",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image_url:ud.image_url,prompt:S.mt.p})});const sd=await s.json();if(sd.error)throw new Error(sd.error);if(!sd.status_url)throw new Error("status_url 없음");
+    const vmsg=["고양이가 기지개를 켜고 있어요...","살금살금 움직이는 중...","거의 다 됐어요...","조금만 기다려주세요..."];let vi=0;
+    let el=0;while(el<180){await new Promise(r=>setTimeout(r,4000));el+=4;vi=(vi+1)%vmsg.length;document.getElementById("lm").textContent=vmsg[vi];
       try{const c=await fetch("/.netlify/functions/check-video",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({status_url:sd.status_url,response_url:sd.response_url})});const cd=await c.json();if(cd.status==="COMPLETED"&&cd.video_url){S.vu=cd.video_url;svr();return;}if(cd.status==="FAILED")throw new Error("영상 생성 실패");}catch(ce){if(ce.message==="영상 생성 실패")throw ce;}}
     throw new Error("시간 초과 (3분)");
   }catch(e){document.getElementById("err").textContent="❌ "+e.message;document.getElementById("err").classList.remove("hidden");ss("setup");}
@@ -183,7 +188,7 @@ function sov(){
 document.getElementById("bpo").addEventListener("click",sov);
 document.getElementById("brp").addEventListener("click",sov);
 document.getElementById("bcp").addEventListener("click",function(){navigator.clipboard&&navigator.clipboard.writeText("To. "+S.rc+"\n\n"+S.lt+"\n\nFrom. "+S.nm+" 🐾");this.textContent="✓ 복사됨";setTimeout(()=>{this.textContent="📋 텍스트 복사";},2000);});
-function rst(){S={ph:null,pb:null,nm:"",rc:"",sp:"반말",ch:null,mo:null,ht:null,lt:"",vu:""};document.getElementById("i-name").value="";document.getElementById("i-rcpt").value="";document.getElementById("pp").innerHTML='<span style="font-size:32px">📷</span><span style="font-size:11px;color:#b8aa97">사진 선택</span>';document.getElementById("err").classList.add("hidden");ra();ck();ss("setup");}
+function rst(){S={ph:null,pb:null,nm:"",rc:"",sp:"반말",ch:null,mo:null,ht:null,mt:MT[0],lt:"",vu:""};document.getElementById("i-name").value="";document.getElementById("i-rcpt").value="";document.getElementById("pp").innerHTML='<span style="font-size:32px">📷</span><span style="font-size:11px;color:#b8aa97">사진 선택</span>';document.getElementById("err").classList.add("hidden");ra();ck();ss("setup");}
 document.getElementById("bn1").addEventListener("click",rst);
 document.getElementById("bn2").addEventListener("click",rst);
 ra();
